@@ -4,18 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game</title>
+    <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-    <div>
-        <div >
-            <input id="x" type="number"/>
-            <input id="y" type="number"/>
-            <button onclick="actionCheckAt()">Play</button>
+    <div style="text-align: center">
+        <div class="center-wrapper-parent">
+            <div class="canvas-wrapper">
+              <canvas id="tic-tac-toe-board" class="center-v"></canvas>
+            </div>
         </div>
-        <div id="grid">
-
+        <div>
+            <img id="result" src="" alt="" width="500" height="300">
         </div>
     </div>
+    
     <script src="./script.js"></script>
+    <!-- <script src="./action.js"></script> -->
 </body>
 </html>
