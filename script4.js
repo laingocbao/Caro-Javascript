@@ -3,14 +3,15 @@
 var player = 1;
 var isWinGame = false
 var lineColor = "#ddd";
-const NUMBER_ROW = 4 
+const NUMBER_ROW = 4
 const NUMBER_CHARACTER_WIN = 4
 const CHARACTER = {
     HUMAN: 'O',
     COMPUTER: 'X',
     EMPTY: '_'
 }
-const DEEP_LEVEL = 10
+const DEEP_LEVEL = 4
+var countTotal = 0
 
 var canvas = document.getElementById('tic-tac-toe-board');
 var context = canvas.getContext('2d');
@@ -43,6 +44,7 @@ function getInitialBoard () {
     //             [CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.EMPTY, CHARACTER.EMPTY],
     //             [CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.EMPTY, CHARACTER.EMPTY], 
     //             [CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.EMPTY]]
+    
     // return board
 }
 
@@ -86,6 +88,7 @@ function clearPlayingArea (xCordinate, yCordinate) {
     sectionSize
   ); 
 }
+
 function drawO (xCordinate, yCordinate) {
   var halfSectionSize = (0.5 * sectionSize);
   var centerX = xCordinate + halfSectionSize;
@@ -221,8 +224,12 @@ function copyArray(board) {
 }
 
 function computerPlayGame() {
+    if (checkBoardGameFull(board)) {
+        return 
+    }
     var boardClone = board
-    var result = miniMaxDecision(boardClone, CHARACTER.COMPUTER, DEEP_LEVEL)
+    var result = alphaBetaPruning(boardClone, CHARACTER.COMPUTER, DEEP_LEVEL, -Math.pow(2, 53), Math.pow(2, 53))
+    miniMaxDecision(boardClone, CHARACTER.COMPUTER, DEEP_LEVEL)
     var index = result[0]
     var row = Math.floor(index/NUMBER_ROW)
     var col = index%NUMBER_ROW
@@ -279,6 +286,44 @@ function checkWinInAxis(board, row, rowCoefficient, col, colCoefficient) {
     return isWin
 }
 
+// Kiểm tra tiềm năng của một ô
+// Một ô được gọi là tiềm năng khi ít nhất 1 trong 8 ô xung quanh nó phải khác trống 
+// Việc kiểm tra này sẽ giúp giảm số tổ hợp không cần thiết
+function checkPotentialCell(board, row, col) { 
+    if (row - 1 >= 0 && col - 1 >= 0 && board[row -1][col - 1] != CHARACTER.EMPTY) {
+        return true
+    }
+
+    if (row - 1 >= 0 && board[row -1][col] != CHARACTER.EMPTY) {
+        return true
+    }
+
+    if (row - 1 >= 0 && col + 1 < NUMBER_ROW && board[row -1][col + 1] != CHARACTER.EMPTY) {
+        return true
+    }
+
+    if (col + 1 < NUMBER_ROW && board[row][col + 1] != CHARACTER.EMPTY) {
+        return true
+    }
+
+    if (row + 1 < NUMBER_ROW && col + 1 < NUMBER_ROW && board[row + 1][col + 1] != CHARACTER.EMPTY) {
+        return true
+    }
+
+    if (row + 1 < NUMBER_ROW && board[row + 1][col] != CHARACTER.EMPTY) {
+        return true
+    }
+
+    if (row + 1 < NUMBER_ROW && col - 1 >= 0 && board[row + 1][col - 1] != CHARACTER.EMPTY) {
+        return true
+    }
+
+    if (col - 1 >= 0 && board[row][col - 1] != CHARACTER.EMPTY) {
+        return true
+    }
+    return false
+}
+
 function checkWin(board) {    
     for (let i = 0; i < NUMBER_ROW; i++) {
         for (let j = 0; j < NUMBER_ROW; j++) {              
@@ -330,11 +375,11 @@ function checkBoardGameFull(board) {
     for (let i = 0; i < NUMBER_ROW; i++) {
         for (let j = 0; j < NUMBER_ROW; j++) { 
             if (board[i][j] == CHARACTER.EMPTY) {
-                return true
+                return false
             }
         }
     }
-    return false
+    return true
 }
 
 function miniMaxDecision(boardTem, characterWillCheck, deepLevel) {  
@@ -356,7 +401,7 @@ function miniMaxDecision(boardTem, characterWillCheck, deepLevel) {
                     }
                 }  
                 else {
-                    if (deepLevel > 1 && checkBoardGameFull(boardTem)) {
+                    if (deepLevel > 1 && !checkBoardGameFull(boardTem)) {
                         score = miniMaxDecision(boardTem, characterWillCheck == CHARACTER.HUMAN ? CHARACTER.COMPUTER : CHARACTER.HUMAN, deepLevel - 1)[1]
                     }
                     else {
@@ -383,12 +428,19 @@ function miniMaxDecision(boardTem, characterWillCheck, deepLevel) {
     return [index, optimizeScore]
 }
 
-function alphaBetaPruning(boardTem, characterWillCheck, deepLevel) {  
-    var optimizeScore = characterWillCheck == CHARACTER.COMPUTER ? -DEEP_LEVEL : DEEP_LEVEL
+function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) { 
+    countTotal += 1
+    console.log(countTotal);
+    
     var index = -1
     for (let i = 0; i < NUMBER_ROW; i++) {
         for (let j = 0; j < NUMBER_ROW; j++) {            
            if (boardTem[i][j] == CHARACTER.EMPTY) {
+                // Nếu cell có tiềm năng thì mới thực hiện bước tiếp theo 
+                if (!checkPotentialCell(boardTem, i, j)) {
+                    continue
+                }
+
                 boardTem[i][j] = characterWillCheck
 
                 var result = checkWin(boardTem)
@@ -402,8 +454,8 @@ function alphaBetaPruning(boardTem, characterWillCheck, deepLevel) {
                     }
                 }  
                 else {
-                    if (deepLevel > 1 && checkBoardGameFull(boardTem)) {
-                        score = miniMaxDecision(boardTem, characterWillCheck == CHARACTER.HUMAN ? CHARACTER.COMPUTER : CHARACTER.HUMAN, deepLevel - 1)[1]
+                    if (deepLevel > 1 && !checkBoardGameFull(boardTem)) {
+                        score = alphaBetaPruning(boardTem, characterWillCheck == CHARACTER.HUMAN ? CHARACTER.COMPUTER : CHARACTER.HUMAN, deepLevel - 1, alpha, beta)[1]
                     }
                     else {
                         boardTem[i][j] = CHARACTER.EMPTY 
@@ -412,19 +464,30 @@ function alphaBetaPruning(boardTem, characterWillCheck, deepLevel) {
                 }   
                 boardTem[i][j] = CHARACTER.EMPTY          
                 
-                if (characterWillCheck == CHARACTER.COMPUTER && score > optimizeScore) {
-                    optimizeScore = score
+                if (characterWillCheck == CHARACTER.COMPUTER && score > alpha) {
+                    alpha = score
                     index = i * NUMBER_ROW + j
                 }
-                else if (characterWillCheck == CHARACTER.HUMAN && score < optimizeScore) {
-                    optimizeScore = score
+                else if (characterWillCheck == CHARACTER.HUMAN && score < beta) {
+                    beta = score
                     index = i * NUMBER_ROW + j
-                }                
+                }   
+                else {
+                    break
+                }             
             }           
         }
     }
-    if (index == -1) {
-        return [index, 0]
+    // if (index == -1) {
+    //     return [index, 0]
+    // }
+    // else 
+    if (characterWillCheck == CHARACTER.COMPUTER) {
+        return [index, alpha]
     }
-    return [index, optimizeScore]
+    else if (characterWillCheck == CHARACTER.HUMAN) {
+        return [index, beta]
+    }
 }
+
+// computerPlayGame()

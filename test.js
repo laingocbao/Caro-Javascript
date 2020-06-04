@@ -1,22 +1,9 @@
-var board = [["_", "_", "_", "_"], 
-            ["_", "_", "_", "_"],
-            ["_", "_", "_", "_"],
-            ["_", "_", "_", "_"]]
-
-function test1(board1) {
-    board1[0][0] = 'O'
-    // board[0][0] = '_'
+for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 5; j++) {
+        if (j == 2){
+            break
+        }
+    }
 }
 
-function copy(board) {
-    var newArray = board.map(function(arr) {
-        return arr.slice();
-    });
-
-    return newArray;
-}
-
-var boardClone = copy(board)
-boardClone[0][0] = 'O'
-console.log(board)
-console.log(boardClone)
+console.log ("Done")
