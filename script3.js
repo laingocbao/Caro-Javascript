@@ -9,6 +9,7 @@ const CHARACTER = {
     COMPUTER: 'X',
     EMPTY: '_'
 }
+const DEEP_LEVEL = 10
 
 var canvas = document.getElementById('tic-tac-toe-board');
 var context = canvas.getContext('2d');
@@ -31,13 +32,13 @@ function getInitialBoard () {
 //   }
 
 //   return board;
-    // var board = [[CHARACTER.COMPUTER, CHARACTER.EMPTY, CHARACTER.EMPTY], 
-    //             [CHARACTER.COMPUTER, CHARACTER.EMPTY, CHARACTER.EMPTY], 
-    //             [CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.HUMAN]]
+    var board = [[CHARACTER.COMPUTER, CHARACTER.HUMAN, CHARACTER.COMPUTER], 
+                [CHARACTER.HUMAN, CHARACTER.HUMAN, CHARACTER.COMPUTER], 
+                [CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.HUMAN]]
 
-    var board = [[CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.EMPTY], 
-                [CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.EMPTY], 
-                [CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.EMPTY]]
+    // var board = [[CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.EMPTY], 
+    //             [CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.EMPTY], 
+    //             [CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.EMPTY]]
     return board
 }
 
@@ -155,6 +156,8 @@ function drawInit(board){
           }
         }
     }
+
+    computerPlayGame()
 }
 
 function clearAllBoardGame(board) {
@@ -203,8 +206,12 @@ canvas.addEventListener('mouseup', function (event) {
         return
     }
 
+    computerPlayGame()
+});
+
+function computerPlayGame() {
     var boardClone = [...board]
-    var index = miniMaxDecision(boardClone, CHARACTER.COMPUTER)[0]
+    var index = miniMaxDecision(boardClone, CHARACTER.COMPUTER, DEEP_LEVEL)[0]
     var row = Math.floor(index/NUMBER_ROW)
     var col = index%NUMBER_ROW
     board[row][col] = CHARACTER.COMPUTER
@@ -212,7 +219,7 @@ canvas.addEventListener('mouseup', function (event) {
     drawLines(10, lineColor);
     checkWinLoseAndShowAlert(board)
     player = 1
-});
+}
 
 function actionCheckAt() {
     var x = document.getElementById('x').value
@@ -293,8 +300,19 @@ function checkWinLoseAndShowAlert (board) {
     }
 }
 
-function miniMaxDecision(boardTem, characterWillCheck) {  
-    var optimizeScore = characterWillCheck == CHARACTER.COMPUTER ? -2 : 2
+function checkBoardGameFull(board) {
+    for (let i = 0; i < NUMBER_ROW; i++) {
+        for (let j = 0; j < NUMBER_ROW; j++) { 
+            if (board[i][j] == CHARACTER.EMPTY) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+function miniMaxDecision(boardTem, characterWillCheck, deepLevel) {  
+    var optimizeScore = characterWillCheck == CHARACTER.COMPUTER ? -DEEP_LEVEL : DEEP_LEVEL
     var index = -1
     for (let i = 0; i < NUMBER_ROW; i++) {
         for (let j = 0; j < NUMBER_ROW; j++) {            
@@ -305,14 +323,19 @@ function miniMaxDecision(boardTem, characterWillCheck) {
                 var score = 0
                 if (result) {
                     if (characterWillCheck == CHARACTER.COMPUTER) {
-                        score = 1
+                        score = deepLevel
                     }
                     else {
-                        score = -1
+                        score = -deepLevel
                     }
                 }  
                 else {
-                    score = miniMaxDecision(boardTem, characterWillCheck == CHARACTER.HUMAN ? CHARACTER.COMPUTER : CHARACTER.HUMAN)[1]
+                    if (deepLevel > 1 && checkBoardGameFull(board)) {
+                        score = miniMaxDecision(boardTem, characterWillCheck == CHARACTER.HUMAN ? CHARACTER.COMPUTER : CHARACTER.HUMAN, deepLevel - 1)[1]
+                    }
+                    else {
+                        continue
+                    }
                 }             
                 
                 if (characterWillCheck == CHARACTER.COMPUTER && score > optimizeScore) {
@@ -327,6 +350,9 @@ function miniMaxDecision(boardTem, characterWillCheck) {
                 boardTem[i][j] = CHARACTER.EMPTY
            }           
         }
+    }
+    if (index == -1) {
+        return [index, 0]
     }
     return [index, optimizeScore]
 }
@@ -368,4 +394,3 @@ function alphaBetaPruning(boardTem, characterWillCheck, alpha, beta) {
     }
     return [index, optimizeScore]
 }
-
