@@ -11,7 +11,6 @@ const CHARACTER = {
     EMPTY: '_'
 }
 const DEEP_LEVEL = 4
-var countTotal = 0
 
 var canvas = document.getElementById('tic-tac-toe-board');
 var context = canvas.getContext('2d');
@@ -33,19 +32,19 @@ function getInitialBoard () {
         }
     }
 
-    return board;
+    // return board;
 
     // var board = [[CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.COMPUTER, CHARACTER.COMPUTER], 
     //             [CHARACTER.HUMAN, CHARACTER.HUMAN, CHARACTER.COMPUTER, CHARACTER.COMPUTER], 
     //             [CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.COMPUTER],
     //             [CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.HUMAN]]
 
-    // var board = [[CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.EMPTY], 
-    //             [CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.EMPTY, CHARACTER.EMPTY],
-    //             [CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.EMPTY, CHARACTER.EMPTY], 
-    //             [CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.EMPTY]]
+    var board = [[CHARACTER.HUMAN, CHARACTER.COMPUTER, CHARACTER.COMPUTER, CHARACTER.COMPUTER], 
+                [CHARACTER.HUMAN, CHARACTER.COMPUTER, CHARACTER.HUMAN, CHARACTER.EMPTY],
+                [CHARACTER.HUMAN, CHARACTER.HUMAN, CHARACTER.HUMAN, CHARACTER.COMPUTER], 
+                [CHARACTER.COMPUTER, CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.EMPTY]]
     
-    // return board
+    return board
 }
 
 var board = getInitialBoard();
@@ -229,7 +228,6 @@ function computerPlayGame() {
     }
     var boardClone = board
     var result = alphaBetaPruning(boardClone, CHARACTER.COMPUTER, DEEP_LEVEL, -Math.pow(2, 53), Math.pow(2, 53))
-    miniMaxDecision(boardClone, CHARACTER.COMPUTER, DEEP_LEVEL)
     var index = result[0]
     var row = Math.floor(index/NUMBER_ROW)
     var col = index%NUMBER_ROW
@@ -429,9 +427,6 @@ function miniMaxDecision(boardTem, characterWillCheck, deepLevel) {
 }
 
 function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) { 
-    countTotal += 1
-    console.log(countTotal);
-    
     var index = -1
     for (let i = 0; i < NUMBER_ROW; i++) {
         for (let j = 0; j < NUMBER_ROW; j++) {            
@@ -478,11 +473,10 @@ function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) 
             }           
         }
     }
-    // if (index == -1) {
-    //     return [index, 0]
-    // }
-    // else 
-    if (characterWillCheck == CHARACTER.COMPUTER) {
+    if (index == -1 && alpha == -Math.pow(2, 53) && beta == Math.pow(2, 53)) {
+        return [index, 0]
+    }
+    else if (characterWillCheck == CHARACTER.COMPUTER) {
         return [index, alpha]
     }
     else if (characterWillCheck == CHARACTER.HUMAN) {
@@ -490,4 +484,4 @@ function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) 
     }
 }
 
-// computerPlayGame()
+computerPlayGame()
