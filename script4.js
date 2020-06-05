@@ -3,8 +3,8 @@
 var player = 1;
 var isWinGame = false
 var lineColor = "#ddd";
-const NUMBER_ROW = 4
-const NUMBER_CHARACTER_WIN = 4
+const NUMBER_ROW = 15
+const NUMBER_CHARACTER_WIN = 5
 const CHARACTER = {
     HUMAN: 'O',
     COMPUTER: 'X',
@@ -15,7 +15,7 @@ const DEEP_LEVEL = 4
 var canvas = document.getElementById('tic-tac-toe-board');
 var context = canvas.getContext('2d');
 
-var canvasSize = 500;
+var canvasSize = 1000;
 var sectionSize = canvasSize / NUMBER_ROW;
 canvas.width = canvasSize;
 canvas.height = canvasSize;
@@ -32,19 +32,29 @@ function getInitialBoard () {
         }
     }
 
-    // return board;
+    return board;
 
     // var board = [[CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.COMPUTER, CHARACTER.COMPUTER], 
     //             [CHARACTER.HUMAN, CHARACTER.HUMAN, CHARACTER.COMPUTER, CHARACTER.COMPUTER], 
     //             [CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.COMPUTER],
     //             [CHARACTER.EMPTY, CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.HUMAN]]
 
-    var board = [[CHARACTER.HUMAN, CHARACTER.COMPUTER, CHARACTER.COMPUTER, CHARACTER.COMPUTER], 
-                [CHARACTER.HUMAN, CHARACTER.COMPUTER, CHARACTER.HUMAN, CHARACTER.EMPTY],
-                [CHARACTER.HUMAN, CHARACTER.HUMAN, CHARACTER.HUMAN, CHARACTER.COMPUTER], 
-                [CHARACTER.COMPUTER, CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.EMPTY]]
+    // var board = [[CHARACTER.HUMAN, CHARACTER.COMPUTER, CHARACTER.COMPUTER, CHARACTER.COMPUTER], 
+    //             [CHARACTER.HUMAN, CHARACTER.COMPUTER, CHARACTER.HUMAN, CHARACTER.EMPTY],
+    //             [CHARACTER.HUMAN, CHARACTER.HUMAN, CHARACTER.HUMAN, CHARACTER.COMPUTER], 
+    //             [CHARACTER.COMPUTER, CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.EMPTY]]
     
-    return board
+    // var board = [["O", "X", "X", "X", "X", "X", "_", "_", "_", "_"],
+    //             ["O", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    //             ["O", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    //             ["O", "O", "O", "_", "_", "_", "_", "_", "_", "_"],
+    //             ["X", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    //             ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    //             ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    //             ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    //             ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    //             ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_"]]
+    // return board
 }
 
 var board = getInitialBoard();
@@ -92,7 +102,8 @@ function drawO (xCordinate, yCordinate) {
   var halfSectionSize = (0.5 * sectionSize);
   var centerX = xCordinate + halfSectionSize;
   var centerY = yCordinate + halfSectionSize;
-  var radius = (sectionSize - 100) / 2;
+  var offset = sectionSize * 0.6
+  var radius = (sectionSize - offset) / 2;
   var startAngle = 0 * Math.PI; 
   var endAngle = 2 * Math.PI;
 
@@ -108,7 +119,7 @@ function drawX (xCordinate, yCordinate) {
 
   context.beginPath();
   
-  var offset = 50;
+  var offset = sectionSize * 0.3;
   context.moveTo(xCordinate + offset, yCordinate + offset);
   context.lineTo(xCordinate + sectionSize - offset, yCordinate + sectionSize - offset);
 
@@ -249,22 +260,22 @@ function checkSafeArea(row, col) {
     }
 
     // Ngang 
-    if (col + NUMBER_ROW - 1 < NUMBER_ROW) {
+    if (col + NUMBER_CHARACTER_WIN - 1 < NUMBER_ROW) {
         result.horizontal = true
     }
 
     // Dọc 
-    if (row + NUMBER_ROW - 1 < NUMBER_ROW) {
+    if (row + NUMBER_CHARACTER_WIN - 1 < NUMBER_ROW) {
         result.vertical = true
     }
 
     // Chéo chính 
-    if ((col + NUMBER_ROW - 1 < NUMBER_ROW) && (row + NUMBER_ROW - 1 < NUMBER_ROW)) {
+    if ((col + NUMBER_CHARACTER_WIN - 1 < NUMBER_ROW) && (row + NUMBER_CHARACTER_WIN - 1 < NUMBER_ROW)) {
         result.mainDiagonal = true
     }
 
     // Chéo phụ 
-    if ((col - NUMBER_ROW + 1 >= 0) && (row + NUMBER_ROW - 1 < NUMBER_ROW)) {
+    if ((col - NUMBER_CHARACTER_WIN + 1 >= 0) && (row + NUMBER_CHARACTER_WIN - 1 < NUMBER_ROW)) {
         result.secondaryDiagonal = true
     }
 
@@ -449,12 +460,12 @@ function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) 
                     }
                 }  
                 else {
-                    if (deepLevel > 1 && !checkBoardGameFull(boardTem)) {
+                    if (deepLevel >= 1 && !checkBoardGameFull(boardTem)) {
                         score = alphaBetaPruning(boardTem, characterWillCheck == CHARACTER.HUMAN ? CHARACTER.COMPUTER : CHARACTER.HUMAN, deepLevel - 1, alpha, beta)[1]
                     }
                     else {
-                        boardTem[i][j] = CHARACTER.EMPTY 
-                        continue
+                        // Khi hết DeepLevel hoặc bàn game đã đầy, thì ghi nhận lại index cuối cùng này, và trạng thái này là hòa, score sẽ bằng 0
+                        score = 0
                     }
                 }   
                 boardTem[i][j] = CHARACTER.EMPTY          
@@ -473,7 +484,11 @@ function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) 
             }           
         }
     }
-    if (index == -1 && alpha == -Math.pow(2, 53) && beta == Math.pow(2, 53)) {
+    if (index == -1 &&
+            ((characterWillCheck == CHARACTER.COMPUTER && alpha == -Math.pow(2, 53))
+            || (characterWillCheck == CHARACTER.HUMAN && beta == Math.pow(2, 53)))
+       ) {
+    // if (index == -1 && alpha == -Math.pow(2, 53) && beta == Math.pow(2, 53)) {
         return [index, 0]
     }
     else if (characterWillCheck == CHARACTER.COMPUTER) {
@@ -484,4 +499,4 @@ function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) 
     }
 }
 
-computerPlayGame()
+// computerPlayGame()
