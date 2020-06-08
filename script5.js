@@ -3,14 +3,14 @@
 var player = 1;
 var isWinGame = false
 var lineColor = "#ddd";
-const NUMBER_ROW = 6
+const NUMBER_ROW = 15
 const NUMBER_CHARACTER_WIN = 5
 const CHARACTER = {
     HUMAN: 'O',
     COMPUTER: 'X',
     EMPTY: '_'
 }
-const DEEP_LEVEL = 4
+const DEEP_LEVEL = 3
 
 var canvas = document.getElementById('tic-tac-toe-board');
 var context = canvas.getContext('2d');
@@ -93,9 +93,11 @@ function addPlayingPiece (mouse, playerCharacter) {
                 if (playerCharacter === CHARACTER.COMPUTER) {
                     drawX(xCordinate, yCordinate);
                     board[y][x] = CHARACTER.COMPUTER
+                    player = 1
                 } else {
                     drawO(xCordinate, yCordinate);
                     board[y][x] = CHARACTER.HUMAN
+                    player = 2
                 }                            
             }        
       }
@@ -231,7 +233,6 @@ canvas.addEventListener('mouseup', function (event) {
     }
 
     checkWinLoseAndShowAlert(board)
-    player = 2
     drawLines(10, lineColor);
     if (isWinGame == true) {
         return
@@ -249,7 +250,7 @@ function copyArray(board) {
 }
 
 function computerPlayGame() {
-    if (checkBoardGameFull(board)) {
+    if (player == 1 || checkBoardGameFull(board)) {
         return 
     }
     var boardClone = board
