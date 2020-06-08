@@ -15,7 +15,7 @@ const DEEP_LEVEL = 4
 var canvas = document.getElementById('tic-tac-toe-board');
 var context = canvas.getContext('2d');
 
-var canvasSize = 800;
+var canvasSize = 700;
 var sectionSize = canvasSize / NUMBER_ROW;
 canvas.width = canvasSize;
 canvas.height = canvasSize;
@@ -32,7 +32,7 @@ function getInitialBoard () {
         }
     }
 
-    // return board;
+    return board;
 
     // var board = [[CHARACTER.EMPTY, CHARACTER.HUMAN, CHARACTER.COMPUTER, CHARACTER.COMPUTER], 
     //             [CHARACTER.HUMAN, CHARACTER.HUMAN, CHARACTER.COMPUTER, CHARACTER.COMPUTER], 
@@ -55,13 +55,21 @@ function getInitialBoard () {
     //             ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
     //             ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_"]]
 
-    var board = [["_", "_", "_", "_", "_", "_"],
-                ["X", "_", "O", "_", "_", "_"],
-                ["_", "X", "O", "_", "_", "_"],
-                ["_", "_", "O", "_", "_", "_"],
-                ["_", "_", "_", "_", "_", "_"],
-                ["_", "_", "_", "_", "_", "_"]]
-    return board
+    // var board = [["_", "_", "_", "_", "_", "_"],
+    //             ["X", "_", "O", "_", "_", "_"],
+    //             ["X", "_", "O", "_", "_", "_"],
+    //             ["_", "_", "O", "_", "_", "_"],
+    //             ["_", "_", "_", "_", "_", "_"],
+    //             ["_", "_", "_", "_", "_", "_"]]
+
+    // var board = [["_", "_", "_", "_", "_", "_"],
+    //             ["X", "O", "_", "_", "_", "_"],
+    //             ["X", "O", "_", "_", "_", "_"],
+    //             ["_", "O", "_", "_", "_", "_"],
+    //             ["_", "_", "_", "_", "_", "_"],
+    //             ["_", "_", "_", "_", "_", "_"]]
+
+    // return board
 }
 
 var board = getInitialBoard();
@@ -258,7 +266,8 @@ function computerPlayGame() {
 
 // Kiểm tra đường biên có an toàn hay không
 // Kết quả trả về là một mảng 4 phần tử kiểu Bool đại diện cho 4 chiều: ngang, dọc, chéo chính, chéo phụ
-function checkSafeArea(row, col) {
+// Hàm này kiểm tra tại ô đó có khả năng tạo được một chuỗi 5 phần tử hay không 
+function checkSafeAreaFor5Cell(row, col) {
     var result = {
         horizontal: false,
         vertical: false,
@@ -289,16 +298,75 @@ function checkSafeArea(row, col) {
     return result
 }
 
-// Hàm này dùng để check win trên một trục, trong đó
+// Kiểm tra đường biên có an toàn hay không
+// Kết quả trả về là một mảng 4 phần tử kiểu Bool đại diện cho 4 chiều: ngang, dọc, chéo chính, chéo phụ
+// Hàm này kiểm tra tại ô đó có khả năng tạo được một chuỗi 4 phần tử, cùng với 2 ô trống hai đầu hay không 
+function checkSafeAreaFor4Cell(row, col) {
+    var result = {
+        horizontal: false,
+        vertical: false,
+        mainDiagonal: false,
+        secondaryDiagonal: false 
+    }
+
+    // Ngang 
+    if (col + NUMBER_CHARACTER_WIN - 1 < NUMBER_ROW && col - 1 >= 0) {
+        result.horizontal = true
+    }
+
+    // Dọc 
+    if (row + NUMBER_CHARACTER_WIN - 1 < NUMBER_ROW && row - 1 >= 0) {
+        result.vertical = true
+    }
+
+    // Chéo chính 
+    if (col + NUMBER_CHARACTER_WIN - 1 < NUMBER_ROW 
+        && col - 1 >= 0
+        && row + NUMBER_CHARACTER_WIN - 1 < NUMBER_ROW
+        && row - 1 >= 0) {
+        result.mainDiagonal = true
+    }
+
+    // Chéo phụ 
+    if (col - NUMBER_CHARACTER_WIN + 1 >= 0 
+        && col + 1 < NUMBER_ROW
+        && row + NUMBER_CHARACTER_WIN - 1 < NUMBER_ROW
+        && row - 1 >= 0) {
+        result.secondaryDiagonal = true
+    }
+
+    return result
+}
+
+// Hàm này dùng để check win 5 ô trên một trục, trong đó
 // row là dòng, rowCoefficient là hệ số cộng trên dòng
 // col là cột, colCoefficient là hệ số công trên cột 
-function checkWinInAxis(board, row, rowCoefficient, col, colCoefficient) {
+function checkWin5InAxis(board, row, rowCoefficient, col, colCoefficient) {
     var isWin = true
     for (let index = 0; index < NUMBER_CHARACTER_WIN; index++) {
         if (board[row][col] != board[row + rowCoefficient * index][col + colCoefficient * index]) {
             isWin = false
         }
     } 
+    return isWin
+}
+
+// Hàm này dùng để check win 4 trên một trục: 4 ô liên tiếp, và trống 2 ô ở 2 đầu 
+// Trong đó
+// row là dòng, rowCoefficient là hệ số cộng trên dòng
+// col là cột, colCoefficient là hệ số công trên cột 
+function checkWin4InAxis(board, row, rowCoefficient, col, colCoefficient) {
+    var isWin = true
+    for (let index = 0; index < NUMBER_CHARACTER_WIN - 1; index++) {
+        if (board[row][col] != board[row + rowCoefficient * index][col + colCoefficient * index]) {
+            isWin = false
+        }
+    } 
+
+    if (board[row - rowCoefficient][col - colCoefficient] != CHARACTER.EMPTY
+        || board[row + (NUMBER_CHARACTER_WIN - 1) * rowCoefficient][col + (NUMBER_CHARACTER_WIN - 1) * colCoefficient] != CHARACTER.EMPTY) {
+        isWin = false
+    }
     return isWin
 }
 
@@ -347,28 +415,51 @@ function checkWin(board) {
                 continue
             }
          
-            var safeAreaResult = checkSafeArea(i, j)
+            var safeArea5CellResult = checkSafeAreaFor5Cell(i, j)
             
-            if (safeAreaResult.horizontal) {    // Ngang 
-                if (checkWinInAxis(board, i, 0, j, 1)) {
+            if (safeArea5CellResult.horizontal) {    // Ngang 
+                if (checkWin5InAxis(board, i, 0, j, 1)) {
                     return true
                 }          
             }
-            if (safeAreaResult.vertical) { // Dọc 
-                if (checkWinInAxis(board, i, 1, j, 0)) {
+            if (safeArea5CellResult.vertical) { // Dọc 
+                if (checkWin5InAxis(board, i, 1, j, 0)) {
                     return true
                 }    
             }
-            if (safeAreaResult.mainDiagonal) { // Chéo chính 
-                if (checkWinInAxis(board, i, 1, j, 1)) {
+            if (safeArea5CellResult.mainDiagonal) { // Chéo chính 
+                if (checkWin5InAxis(board, i, 1, j, 1)) {
                     return true
                 }    
             }
-            if (safeAreaResult.secondaryDiagonal) {    // Chéo phụ
-                if (checkWinInAxis(board, i, 1, j, -1)) {
+            if (safeArea5CellResult.secondaryDiagonal) {    // Chéo phụ
+                if (checkWin5InAxis(board, i, 1, j, -1)) {
                     return true
                 }    
-            }                     
+            }          
+
+            var safeArea4CellResult = checkSafeAreaFor4Cell(i, j)
+            
+            if (safeArea4CellResult.horizontal) {    // Ngang 
+                if (checkWin4InAxis(board, i, 0, j, 1)) {
+                    return true
+                }          
+            }
+            if (safeArea4CellResult.vertical) { // Dọc 
+                if (checkWin4InAxis(board, i, 1, j, 0)) {
+                    return true
+                }    
+            }
+            if (safeArea4CellResult.mainDiagonal) { // Chéo chính 
+                if (checkWin4InAxis(board, i, 1, j, 1)) {
+                    return true
+                }    
+            }
+            if (safeArea4CellResult.secondaryDiagonal) {    // Chéo phụ
+                if (checkWin4InAxis(board, i, 1, j, -1)) {
+                    return true
+                }    
+            }                 
         }
     }
     return false
@@ -398,55 +489,11 @@ function checkBoardGameFull(board) {
     return true
 }
 
-function miniMaxDecision(boardTem, characterWillCheck, deepLevel) {  
-    var optimizeScore = characterWillCheck == CHARACTER.COMPUTER ? -DEEP_LEVEL : DEEP_LEVEL
-    var index = -1
-    for (let i = 0; i < NUMBER_ROW; i++) {
-        for (let j = 0; j < NUMBER_ROW; j++) {            
-           if (boardTem[i][j] == CHARACTER.EMPTY) {
-                boardTem[i][j] = characterWillCheck
-
-                var result = checkWin(boardTem)
-                var score = 0
-                if (result) {
-                    if (characterWillCheck == CHARACTER.COMPUTER) {
-                        score = deepLevel
-                    }
-                    else {
-                        score = -deepLevel
-                    }
-                }  
-                else {
-                    if (deepLevel > 1 && !checkBoardGameFull(boardTem)) {
-                        score = miniMaxDecision(boardTem, characterWillCheck == CHARACTER.HUMAN ? CHARACTER.COMPUTER : CHARACTER.HUMAN, deepLevel - 1)[1]
-                    }
-                    else {
-                        boardTem[i][j] = CHARACTER.EMPTY 
-                        continue
-                    }
-                }   
-                boardTem[i][j] = CHARACTER.EMPTY          
-                
-                if (characterWillCheck == CHARACTER.COMPUTER && score > optimizeScore) {
-                    optimizeScore = score
-                    index = i * NUMBER_ROW + j
-                }
-                else if (characterWillCheck == CHARACTER.HUMAN && score < optimizeScore) {
-                    optimizeScore = score
-                    index = i * NUMBER_ROW + j
-                }                
-            }           
-        }
-    }
-    if (index == -1) {
-        return [index, 0]
-    }
-    return [index, optimizeScore]
-}
-
 function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) { 
     var index = -1
+    loop1:
     for (let i = 0; i < NUMBER_ROW; i++) {
+        loop2:
         for (let j = 0; j < NUMBER_ROW; j++) {            
            if (boardTem[i][j] == CHARACTER.EMPTY) {
                 // Nếu cell có tiềm năng thì mới thực hiện bước tiếp theo 
@@ -477,16 +524,16 @@ function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) 
                 }   
                 boardTem[i][j] = CHARACTER.EMPTY          
                 
-                if (characterWillCheck == CHARACTER.COMPUTER && score > alpha) {
+                if (characterWillCheck == CHARACTER.COMPUTER && score >= alpha) {
                     alpha = score
                     index = i * NUMBER_ROW + j
                 }
-                else if (characterWillCheck == CHARACTER.HUMAN && score < beta) {
+                else if (characterWillCheck == CHARACTER.HUMAN && score <= beta) {
                     beta = score
                     index = i * NUMBER_ROW + j
                 }   
                 else {
-                    break
+                    break loop1
                 }             
             }           
         }
@@ -507,9 +554,16 @@ function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) 
 }
 
 // computerPlayGame()
-board[0][0] = CHARACTER.COMPUTER
-var result = alphaBetaPruning(board, CHARACTER.COMPUTER, DEEP_LEVEL, -Math.pow(2, 53), Math.pow(2, 53))
-console.log("Done")
-// board[0][0] = CHARACTER.EMPTY
-// board[0][0] = CHARACTER.COMPUTER
-// result = alphaBetaPruning(board, CHARACTER.COMPUTER, DEEP_LEVEL, -Math.pow(2, 53), Math.pow(2, 53))
+// board[0][1] = CHARACTER.HUMAN
+// console.log(alphaBetaPruning(board, CHARACTER.COMPUTER, DEEP_LEVEL, -Math.pow(2, 53), Math.pow(2, 53)))
+// board[0][2] = CHARACTER.EMPTY
+
+// board[0][3] = CHARACTER.COMPUTER
+// console.log(alphaBetaPruning(board, CHARACTER.HUMAN, DEEP_LEVEL, -Math.pow(2, 53), Math.pow(2, 53)))
+
+// board[0][2] = CHARACTER.COMPUTER
+// console.log(alphaBetaPruning(board, CHARACTER.HUMAN, DEEP_LEVEL, -Math.pow(2, 53), Math.pow(2, 53)))
+// board[0][2] = CHARACTER.EMPTY
+
+// board[3][0] = CHARACTER.COMPUTER
+// console.log(alphaBetaPruning(board, CHARACTER.HUMAN, DEEP_LEVEL, -Math.pow(2, 53), Math.pow(2, 53)))

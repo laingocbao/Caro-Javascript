@@ -3,8 +3,8 @@
 var player = 1;
 var isWinGame = false
 var lineColor = "#ddd";
-const NUMBER_ROW = 15
-const NUMBER_CHARACTER_WIN = 5
+const NUMBER_ROW = 3
+const NUMBER_CHARACTER_WIN = 3
 const CHARACTER = {
     HUMAN: 'O',
     COMPUTER: 'X',
@@ -15,7 +15,7 @@ const DEEP_LEVEL = 4
 var canvas = document.getElementById('tic-tac-toe-board');
 var context = canvas.getContext('2d');
 
-var canvasSize = 1000;
+var canvasSize = 500;
 var sectionSize = canvasSize / NUMBER_ROW;
 canvas.width = canvasSize;
 canvas.height = canvasSize;
