@@ -286,6 +286,11 @@ function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) 
 
                 var result = checkWin(boardTem)
                 var score = 0
+
+                if (deepLevel == DEEP_LEVEL && i == 5 && j == 8) {
+                    console.log(i, j, score)
+                }
+
                 if (result) {
                     if (characterWillCheck == CHARACTER.COMPUTER) {
                         score = deepLevel
@@ -315,7 +320,11 @@ function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) 
                 }   
                 else {
                     break loop1
-                }             
+                } 
+
+                // if (alpha >= beta){
+                //     return [-1, 0]
+                // }            
             }           
         }
     }
@@ -334,11 +343,13 @@ function alphaBetaPruning(boardTem, characterWillCheck, deepLevel, alpha, beta) 
     }
 }
 
-player = 2
+// player = 2
 // computerPlayGame()
-// board[0][1] = CHARACTER.HUMAN
-// var result = alphaBetaPruning(board, CHARACTER.COMPUTER, DEEP_LEVEL, -Math.pow(2, 53), Math.pow(2, 53))
-// console.log(Math.floor(result[0] / NUMBER_ROW), result[0] % NUMBER_ROW, result[1])
+// board[5][8] = CHARACTER.COMPUTER
+// board[13][13] = CHARACTER.HUMAN
+// console.log(checkWin(board))
+    var result = alphaBetaPruning(board, CHARACTER.COMPUTER, DEEP_LEVEL, -Math.pow(2, 53), Math.pow(2, 53))
+    console.log(Math.floor(result[0] / NUMBER_ROW), result[0] % NUMBER_ROW, result[1])
 // board[0][2] = CHARACTER.EMPTY
 
 // board[0][3] = CHARACTER.COMPUTER
